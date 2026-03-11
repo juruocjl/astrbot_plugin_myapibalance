@@ -1,30 +1,17 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "scheme": {
-      "type": "string",
-      "title": "协议",
-      "description": "接口协议，通常为 http 或 https",
-      "default": "http"
-    },
-    "host": {
-      "type": "string",
-      "title": "主机",
-      "description": "API 服务主机名或 IP",
-      "default": "127.0.0.1"
-    },
-    "port": {
-      "type": "integer",
-      "title": "端口",
-      "description": "API 服务端口",
-      "default": 3000,
-      "minimum": 1,
-      "maximum": 65535
-    }
+  "scheme": {
+    "description": "接口协议，通常为 http 或 https",
+    "type": "string",
+    "default": "http"
   },
-  "required": [
-    "host",
-    "port"
-  ]
+  "host": {
+    "description": "API 服务主机名或 IP",
+    "type": "string",
+    "default": "127.0.0.1"
+  },
+  "port": {
+    "description": "API 服务端口",
+    "type": "int",
+    "default": 3000
+  }
 }

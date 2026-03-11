@@ -8,7 +8,7 @@ from astrbot.api.event import filter
 from astrbot.api.star import Context, Star, register
 
 
-@register("myapibalance", "cjlqwq", "查询 API 余额与用量", "1.0.1")
+@register("myapibalance", "cjlqwq", "查询 API 余额与用量", "1.0.2")
 class MyApiBalancePlugin(Star):
     def __init__(self, context: Context, config: dict = None):
         super().__init__(context)
