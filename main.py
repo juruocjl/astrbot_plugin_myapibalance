@@ -1,24 +1,79 @@
-from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
-from astrbot.api.star import Context, Star, register
+import json
+import urllib.error
+import urllib.parse
+import urllib.request
+
 from astrbot.api import logger
+from astrbot.api.event import filter
+from astrbot.api.star import Context, Star, register
 
-@register("helloworld", "YourName", "一个简单的 Hello World 插件", "1.0.0")
-class MyPlugin(Star):
-    def __init__(self, context: Context):
+
+@register("myapibalance", "cjlqwq", "查询 API 余额与用量", "1.0.1")
+class MyApiBalancePlugin(Star):
+    def __init__(self, context: Context, config: dict = None):
         super().__init__(context)
+        self.config = config or {}
 
-    async def initialize(self):
-        """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
+    def _get_base_url(self) -> str:
+        host = str(self.config.get("host", "127.0.0.1")).strip() or "127.0.0.1"
+        port = str(self.config.get("port", 3000)).strip() or "3000"
+        scheme = str(self.config.get("scheme", "http")).strip() or "http"
+        return f"{scheme}://{host}:{port}"
 
-    # 注册指令的装饰器。指令名为 helloworld。注册成功后，发送 `/helloworld` 就会触发这个指令，并回复 `你好, {user_name}!`
-    @filter.command("helloworld")
-    async def helloworld(self, event: AstrMessageEvent):
-        """这是一个 hello world 指令""" # 这是 handler 的描述，将会被解析方便用户了解插件内容。建议填写。
-        user_name = event.get_sender_name()
-        message_str = event.message_str # 用户发的纯文本消息字符串
-        message_chain = event.get_messages() # 用户所发的消息的消息链 # from astrbot.api.message_components import *
-        logger.info(message_chain)
-        yield event.plain_result(f"Hello, {user_name}, 你发了 {message_str}!") # 发送一条纯文本消息
+    def _request_json(self, path: str, query: dict = None) -> str:
+        query = query or {}
+        base_url = self._get_base_url()
+        encoded_query = urllib.parse.urlencode(query)
+        url = f"{base_url}{path}"
+        if encoded_query:
+            url = f"{url}?{encoded_query}"
 
-    async def terminate(self):
-        """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
+        try:
+            with urllib.request.urlopen(url, timeout=10) as response:
+                body = response.read().decode("utf-8", errors="replace")
+                try:
+                    payload = json.loads(body)
+                    return json.dumps(payload, ensure_ascii=False, indent=2)
+                except json.JSONDecodeError:
+                    return body
+        except urllib.error.HTTPError as exc:
+            error_body = exc.read().decode("utf-8", errors="replace")
+            logger.error("myapibalance HTTPError: %s %s", exc.code, error_body)
+            return f"请求失败，HTTP {exc.code}: {error_body or exc.reason}"
+        except urllib.error.URLError as exc:
+            logger.error("myapibalance URLError: %s", exc.reason)
+            return f"请求失败，无法连接到 {base_url}，错误: {exc.reason}"
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("myapibalance unknown error")
+            return f"请求失败，未知错误: {exc}"
+
+    @filter.llm_tool(name="query_total_cost_by_date")
+    async def query_total_cost_by_date(self, start_date: str, end_date: str) -> str:
+        """查询区间总花费。
+
+        Args:
+            start_date(string): 开始日期，格式 YYYY-MM-DD。
+            end_date(string): 结束日期，格式 YYYY-MM-DD。
+        """
+        return self._request_json(
+            "/admin/stats/total-cost",
+            {"start_date": start_date, "end_date": end_date},
+        )
+
+    @filter.llm_tool(name="query_total_cost_by_time")
+    async def query_total_cost_by_time(self, start_time: str, end_time: str) -> str:
+        """按细粒度时间范围查询总花费（精确到秒）。
+
+        Args:
+            start_time(string): 开始时间，格式 YYYY-MM-DDTHH:MM:SS。
+            end_time(string): 结束时间，格式 YYYY-MM-DDTHH:MM:SS。
+        """
+        return self._request_json(
+            "/admin/stats/total-cost",
+            {"start_time": start_time, "end_time": end_time},
+        )
+
+    @filter.llm_tool(name="query_remaining_quota")
+    async def query_remaining_quota(self) -> str:
+        """查询全局剩余额度汇总。"""
+        return self._request_json("/admin/stats/remaining-quota")
