@@ -4,11 +4,11 @@ import urllib.parse
 import urllib.request
 
 from astrbot.api import logger
-from astrbot.api.event import filter
+from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 
 
-@register("myapibalance", "cjlqwq", "查询 API 余额与用量", "1.0.2")
+@register("myapibalance", "cjlqwq", "查询 API 余额与用量", "1.0.3")
 class MyApiBalancePlugin(Star):
     def __init__(self, context: Context, config: dict = None):
         super().__init__(context)
@@ -48,7 +48,7 @@ class MyApiBalancePlugin(Star):
             return f"请求失败，未知错误: {exc}"
 
     @filter.llm_tool(name="query_total_cost_by_date")
-    async def query_total_cost_by_date(self, start_date: str, end_date: str) -> str:
+    async def query_total_cost_by_date(self, event: AstrMessageEvent, start_date: str, end_date: str) -> str:
         """查询区间总花费。
 
         Args:
@@ -61,7 +61,7 @@ class MyApiBalancePlugin(Star):
         )
 
     @filter.llm_tool(name="query_total_cost_by_time")
-    async def query_total_cost_by_time(self, start_time: str, end_time: str) -> str:
+    async def query_total_cost_by_time(self, event: AstrMessageEvent, start_time: str, end_time: str) -> str:
         """按细粒度时间范围查询总花费（精确到秒）。
 
         Args:
@@ -74,6 +74,6 @@ class MyApiBalancePlugin(Star):
         )
 
     @filter.llm_tool(name="query_remaining_quota")
-    async def query_remaining_quota(self) -> str:
+    async def query_remaining_quota(self, event: AstrMessageEvent) -> str:
         """查询全局剩余额度汇总。"""
         return self._request_json("/admin/stats/remaining-quota")
