@@ -8,7 +8,7 @@ from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 
 
-@register("myapibalance", "cjlqwq", "查询 API 余额与用量", "1.0.3")
+@register("myapibalance", "cjlqwq", "查询 API 余额与用量", "1.0.4")
 class MyApiBalancePlugin(Star):
     def __init__(self, context: Context, config: dict = None):
         super().__init__(context)
@@ -23,13 +23,18 @@ class MyApiBalancePlugin(Star):
     def _request_json(self, path: str, query: dict = None) -> str:
         query = query or {}
         base_url = self._get_base_url()
+        token = str(self.config.get("token", "change-me")).strip() or "change-me"
         encoded_query = urllib.parse.urlencode(query)
         url = f"{base_url}{path}"
         if encoded_query:
             url = f"{url}?{encoded_query}"
+        request = urllib.request.Request(
+            url,
+            headers={"X-Admin-Token": token},
+        )
 
         try:
-            with urllib.request.urlopen(url, timeout=10) as response:
+            with urllib.request.urlopen(request, timeout=10) as response:
                 body = response.read().decode("utf-8", errors="replace")
                 try:
                     payload = json.loads(body)

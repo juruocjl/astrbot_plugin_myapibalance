@@ -8,6 +8,7 @@
 - 查询细粒度时间范围总花费（精确到秒）
 - 查询全局剩余额度汇总
 - 支持在插件配置中修改请求端口
+- 支持通过配置项设置管理员 Token（请求头 `X-Admin-Token`）
 
 ## 对应接口
 
@@ -22,8 +23,10 @@
 - `scheme`：默认 `http`
 - `host`：默认 `127.0.0.1`
 - `port`：默认 `3000`
+- `token`：默认 `change-me`，会作为请求头 `X-Admin-Token` 发送
 
 默认情况下，请求地址为 `http://127.0.0.1:3000`。
+默认请求头包含 `X-Admin-Token: change-me`。
 
 ## 暴露的 LLM 工具
 
@@ -35,11 +38,11 @@
 
 ```powershell
 # 仅查询区间总花费
-Invoke-RestMethod "http://127.0.0.1:3000/admin/stats/total-cost?start_date=2026-03-11&end_date=2026-03-11"
+Invoke-RestMethod "http://127.0.0.1:3000/admin/stats/total-cost?start_date=2026-03-11&end_date=2026-03-11" -Headers @{"X-Admin-Token"="change-me"}
 
 # 细粒度时间范围查询总花费（精确到秒，基于请求明细）
-Invoke-RestMethod "http://127.0.0.1:3000/admin/stats/total-cost?start_time=2026-03-11T10:00:00&end_time=2026-03-11T10:30:00"
+Invoke-RestMethod "http://127.0.0.1:3000/admin/stats/total-cost?start_time=2026-03-11T10:00:00&end_time=2026-03-11T10:30:00" -Headers @{"X-Admin-Token"="change-me"}
 
 # 查询全局剩余额度汇总
-Invoke-RestMethod "http://127.0.0.1:3000/admin/stats/remaining-quota"
+Invoke-RestMethod "http://127.0.0.1:3000/admin/stats/remaining-quota" -Headers @{"X-Admin-Token"="change-me"}
 ```

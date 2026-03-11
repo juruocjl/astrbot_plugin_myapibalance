@@ -1,6 +1,6 @@
 name: myapibalance
 display_name: myapibalance
 desc: 查询 API 总花费与剩余额度。
-version: v1.0.3
+version: v1.0.4
 author: cjlqwq
 repo: https://github.com/juruocjl/astrbot_plugin_myapibalance

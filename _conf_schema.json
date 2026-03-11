@@ -13,5 +13,10 @@
     "description": "API 服务端口",
     "type": "int",
     "default": 3000
+  },
+  "token": {
+    "description": "管理员 Token，请求头 X-Admin-Token 的值",
+    "type": "string",
+    "default": "change-me"
   }
 }
